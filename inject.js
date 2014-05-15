@@ -4,11 +4,12 @@
       , SHOWN  = 'octotree.shown'
       // ugly, I know, can it be improved?
       , REGEXP = /([^\/]+)\/([^\/]+)(?:\/([^\/]+))?/
-      
+
   var $html    = $('html')
     , $sidebar = $('<nav class="octotree_sidebar">' +
                      '<h1>loading...</h1>' +
                      '<div class="tree"></div>' +
+                     '<div class="drag-bar"></div>' +
                    '</nav>')
     , $tree    = $sidebar.find('.tree')
     , $token   = $('<form>' +
@@ -27,6 +28,7 @@
 
   $(document).ready(function() {
     loadRepo(true)
+    setupResize()
   })
 
   function loadRepo(initDom) {
@@ -58,8 +60,8 @@
     // if match[3] exists, it must be either 'tree' or 'blob'
     // if (match[3] && !~['tree', 'blob'].indexOf(match[3])) return false
 
-    return { 
-      username : match[1], 
+    return {
+      username : match[1],
       reponame : match[2],
       branch   : $('*[data-master-branch]').data('ref') || 'master'
     }
@@ -111,7 +113,7 @@
     var msg = 'Error: ' + err.error
     if (err.error === 401) msg = 'Invalid token!'
     else if (err.error === 404) msg = 'Private or invalid repository!'
-    else if (err.error === 403 && ~err.request.getAllResponseHeaders().indexOf('X-RateLimit-Remaining: 0')) 
+    else if (err.error === 403 && ~err.request.getAllResponseHeaders().indexOf('X-RateLimit-Remaining: 0'))
       msg = 'API limit exceeded!'
     updateSidebar(msg, true)
   }
@@ -133,14 +135,14 @@
       .on('click', function(e) {
         var $target = $(e.target)
         if ($target.is('a.jstree-anchor') && $target.children(':first').hasClass('blob')) {
-          $.pjax({ 
-            url: $target.attr('href'), 
-            container: $('#js-repo-pjax-container') 
+          $.pjax({
+            url: $target.attr('href'),
+            container: $('#js-repo-pjax-container')
           })
         }
       })
       .on('ready.jstree', function() {
-        updateSidebar(repo.username + ' / ' + repo.reponame + ' [' + repo.branch + ']')  
+        updateSidebar(repo.username + ' / ' + repo.reponame + ' [' + repo.branch + ']')
       })
   }
 
@@ -166,7 +168,29 @@
     if (shown) $html.removeClass(PREFIX)
     else $html.addClass(PREFIX)
     store.set(SHOWN, !shown)
-  } 
+  }
+
+  function setupResize() {
+    var onmousemove = function(ev) {
+      $('.octotree_sidebar').css({width: ev.clientX + 'px'});
+      $('.octotree_toggle').css({left: (ev.clientX-35) + 'px'});
+      $('html').css({'margin-left': ev.clientX + 'px'});
+    };
+    var onmousedown = function(ev) {
+      $('.drag-bar').css({background: 'rgba(0,0,0,0.2)'});
+      $('body').css({'-webkit-user-select': 'none'});
+      document.addEventListener('mousemove', onmousemove);
+    };
+    var onmouseup = function(ev) {
+      $('.drag-bar').css({background: 'transparent'});
+      $('body').css({'-webkit-user-select': 'initial'});
+      $('.octotree_toggle').css({left: 'initial'});
+      document.removeEventListener('mousemove', onmousemove);
+    };
+
+    $('.drag-bar').on('mousedown', onmousedown);
+    document.addEventListener('mouseup', onmouseup);
+  }
 
   function saveToken(event) {
     event.preventDefault()
@@ -179,7 +203,7 @@
     }
     store.set(TOKEN, token)
     loadRepo()
-  }   
+  }
 
   function Storage() {
     this.get = function(key) {
