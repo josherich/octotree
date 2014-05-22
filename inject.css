@@ -83,9 +83,9 @@ html.octotree {
     cursor: ew-resize;
     width: 5px;
     height: 100%;
-    position: absolute;
+    position: fixed;
     top: 0;
-    right: 0;
+    left: 250px;
 }
 /* Toggle button */
 .octotree_toggle {

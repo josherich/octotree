@@ -9,8 +9,9 @@
     , $sidebar = $('<nav class="octotree_sidebar">' +
                      '<h1>loading...</h1>' +
                      '<div class="tree"></div>' +
-                     '<div class="drag-bar"></div>' +
-                   '</nav>')
+                   '</nav>' +
+                    '<div class="drag-bar"></div>'
+                   )
     , $tree    = $sidebar.find('.tree')
     , $token   = $('<form>' +
                      '<div>' +
@@ -174,6 +175,8 @@
     var onmousemove = function(ev) {
       $('.octotree_sidebar').css({width: ev.clientX + 'px'});
       $('.octotree_toggle').css({left: (ev.clientX-35) + 'px'});
+      $('.drag-bar').css({left: ev.clientX + 'px'});
+
       $('html').css({'margin-left': ev.clientX + 'px'});
     };
     var onmousedown = function(ev) {
